@@ -5,7 +5,7 @@ import { cheerio } from 'cheerio'
 import {
   setRetainerList,
   retainerList as _retainerList,
-  getRetainerListFromStorage
+  getRetainerListFromStorage, setInBag, retainerBagItems as _retainerBagItems, inBag, getInBag
 } from '../Repository/RetainersRepository.ts'
 import { IConfig } from 'https://deno.land/x/axiod@0.26.1/interfaces.ts'
 
@@ -28,7 +28,7 @@ const headers:IConfig = getHeaderConfig()
  * 自分のログイン済みCookieを使用して自分のキャラクターページを取得する
  * @return {void}
  */
-export const fetchRetainerList = () => {
+export const fetchRetainerList = async () => {
   // TODO: ストレージのキャッシュ期間を設定する
   // すでに取得していたら終了
   // const retainerList = this.retainersRepository.getRetainerList()
@@ -38,23 +38,27 @@ export const fetchRetainerList = () => {
   // }
 
   // リテイナーリストへのアクセス
-  axiod.get(myCharacterEndpoint + '/retainer', headers).then(({ data }) => {
-    const $ = cheerio.load(data)
-    const retainersDom = $('body > div.ldst__bg > div.ldst__contents.clearfix > div.ldst__main > div > div.retainer__data.js__toggle_wrapper > ul > li > a')
-    const storageList: _retainerList[] = [];
+  await axiod.get(myCharacterEndpoint + '/retainer', headers)
+    .then(({ data }) => {
+      const $ = cheerio.load(data)
+      const retainersDom = $('body > div.ldst__bg > div.ldst__contents.clearfix > div.ldst__main > div > div.retainer__data.js__toggle_wrapper > ul > li > a')
+      const storageList: _retainerList[] = [];
 
-    $(retainersDom).each((_: bigint, element: string) => {
-      const domElement = $(element)
-      storageList.push({
-        name: domElement.text(),
-        url: domElement.attr('href')
+      $(retainersDom).each((_: bigint, element: string) => {
+        const domElement = $(element)
+        storageList.push({
+          name: domElement.text(),
+          url: domElement.attr('href')
+        })
       })
+      // ローカルストレージにリテイナーリストを格納する
+      setRetainerList(storageList)
     })
-    // ローカルストレージにリテイナーリストを格納する
-    setRetainerList(storageList)
-  })
 }
 
+/**
+ * Retrieving the contents of the retainer's bag
+ */
 export const fetchRetainerBagList = async () => {
   const retainerListFromStorage = getRetainerListFromStorage()
   if (retainerListFromStorage !== null) {
@@ -62,19 +66,24 @@ export const fetchRetainerBagList = async () => {
       const { name, url } = retainerListFromStorageObject
       const retainerBagUrl = `${ROOT_URL}${url}baggage/`
       console.log(name)
+      const retainerBagItems: inBag[] = [];
       await axiod.get(retainerBagUrl, headers)
         .then(({ data }) => {
           const $ = cheerio.load(data)
           const retainerItemList = 'div.retainer__content.sys_retainer-content.active > ul.item-list--footer.sys_item_list > li'
           const bagDom = $(retainerItemList)
-          console.log(bagDom)
           for (const bagDomElement of bagDom) {
-            const itemName: string = bagDomElement.children["1"].children["0"].children["0"].children["0"].data
-            const itemAmount: string = bagDomElement.children["2"].children["0"].data
+            const item: inBag = {
+              itemName: bagDomElement.children["1"].children["0"].children["0"].children["0"].data,
+              amount: bagDomElement.children["2"].children["0"].data
+            }
+            retainerBagItems.push(item)
           }
+          setInBag(name, {items: retainerBagItems})
         }).catch((error) => {
           console.log('error: ' + error);
         })
+      console.log(getInBag(name))
     }
   }
 }

@@ -4,6 +4,7 @@ export type retainerList = {
 }
 
 const storageKey = 'retainerList'
+const inBagSuffixKey = '_bag'
 
 export const setRetainerList = (retainersList: retainerList[]) => {
   localStorage.setItem(storageKey, JSON.stringify(retainersList))
@@ -30,6 +31,19 @@ export type retainerBagItems = {
   items: inBag[]
 }
 
+/**
+ * Save the contents of the retainer bag to local storage
+ * @param retainerName
+ * @param items
+ */
 export const setInBag = (retainerName: string, items: retainerBagItems) => {
-  localStorage.setItem(retainerName, JSON.stringify(items))
+  localStorage.setItem(retainerName + inBagSuffixKey, JSON.stringify(items))
+}
+
+export const getInBag = (retainerName: string) => {
+  const storeItems: string|null = localStorage.getItem(retainerName + inBagSuffixKey)
+  if (storeItems !== null) {
+    return JSON.parse(storeItems)
+  }
+  return null
 }

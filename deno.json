@@ -1,5 +1,7 @@
 {
   "tasks": {
+    "fresh:start": "deno run -A --watch=./routes/ ./dev.ts",
+    "fresh:debug": "deno run -A ./dev.ts",
     "start": "deno run -A --watch=src/ ./src/main.ts",
     "debug": "deno run -A ./src/main.ts"
   },

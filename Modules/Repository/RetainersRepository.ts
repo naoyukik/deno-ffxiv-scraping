@@ -3,6 +3,19 @@ export type retainerList = {
   url: string
 }
 
+export type inBag = {
+  itemName: string
+  amount: number
+}
+
+export type retainerBagItems = {
+  items: inBag[]
+}
+
+export interface retainerListResponseJson {
+  data: retainerList[]
+}
+
 const storageKey = 'retainerList'
 const inBagSuffixKey = '_bag'
 
@@ -14,21 +27,18 @@ export const setRetainerList = (retainersList: retainerList[]) => {
  * リテイナーリストをストレージから取り出す
  * @return {retainerList[]|null}
  */
-export const getRetainerListFromStorage = () => {
-  const storeItems: string|null = localStorage.getItem(storageKey)
-  if (storeItems !== null) {
-    return JSON.parse(storeItems)
+export const getRetainerListFromStorage = (isJson = false) => {
+  const storeItemsJson: string|null = localStorage.getItem(storageKey)
+  if (storeItemsJson !== null) {
+    if (isJson) {
+      const storeItems = JSON.parse(storeItemsJson)
+      const response: retainerListResponseJson = JSON.parse()
+      return response
+    } else {
+      return storeItemsJson
+    }
   }
   return null
-}
-
-export type inBag = {
-  itemName: string
-  amount: number
-}
-
-export type retainerBagItems = {
-  items: inBag[]
 }
 
 /**

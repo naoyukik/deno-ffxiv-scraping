@@ -56,6 +56,10 @@ export const fetchRetainerList = async () => {
     })
 }
 
+export const getRetainerList = (isJson = false) => {
+  getRetainerListFromStorage(isJson)
+}
+
 /**
  * Retrieving the contents of the retainer's bag
  */
